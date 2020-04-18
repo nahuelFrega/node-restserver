@@ -2,7 +2,7 @@ const express = require('express');
 const Usuario = require('../models/usuario');
 const app = express();
 const bcrypt = require('bcrypt');
-
+const _ = require('underscore');
 
 app.get('/usuario', function(req, res) {
     res.json('get Usuario');
@@ -27,13 +27,13 @@ app.post('/usuario', function(req, res) {
 
             return res.status(400).json({
                 ok: false,
-                err,
+                err
             });
         }
 
-        res.status(200).json({
+        res.json({
             ok: true,
-            usuario: usuarioDB,
+            usuario: usuarioDB
         })
 
     });
@@ -43,10 +43,24 @@ app.post('/usuario', function(req, res) {
 app.put('/usuario/:id', function(req, res) {
 
     let id = req.params.id;
+    // Permite definir que elementos pueden ser editados
+    let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
 
-    res.json({
-        id
-    });
+    Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true }, (err, usuarioDB) => {
+
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err
+            });
+        }
+
+        res.json({
+            ok: true,
+            usuario: usuarioDB
+        })
+
+    })
 
 });
 

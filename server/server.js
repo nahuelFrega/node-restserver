@@ -15,10 +15,7 @@ app.use(require('./routes/usuario'));
 
 
 // Conexión DB
-mongoose.connect(`mongodb://localhost:27017/cafe`, {
-        useUnifiedTopology: true,
-        useNewUrlParser: true,
-    })
+mongoose.connect(`mongodb://localhost:27017/cafe`, { useUnifiedTopology: true, useNewUrlParser: true })
     .then(() => console.log('DB Connected!'))
     .catch(err => {
         console.log(`DB Connection Error: $ { err.message }`);
