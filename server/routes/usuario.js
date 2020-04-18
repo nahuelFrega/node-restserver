@@ -5,7 +5,52 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 
 app.get('/usuario', function(req, res) {
-    res.json('get Usuario');
+
+    let desde = req.query.desde || 0;
+    desde = Number(desde);
+    let limite = req.query.limite || 5;
+    limite = Number(limite);
+
+    const condiciones = {
+        estado: true
+    }
+
+    Usuario.find(condiciones, 'nombre email role estado google')
+        .skip(desde)
+        .limit(limite)
+        .exec((err, usuarios) => {
+
+            if (err) {
+
+                return res.status(400).json({
+                    ok: false,
+                    err
+                });
+            }
+
+            Usuario.countDocuments(condiciones)
+                .skip(desde)
+                .limit(limite)
+                .exec((err, contador) => {
+
+                    if (err) {
+
+                        return res.status(400).json({
+                            ok: false,
+                            err
+                        });
+                    }
+
+                    res.json({
+                        ok: true,
+                        cantidad: contador,
+                        usuarios
+                    });
+
+                });
+
+        })
+
 });
 
 app.post('/usuario', function(req, res) {
@@ -64,8 +109,39 @@ app.put('/usuario/:id', function(req, res) {
 
 });
 
-app.delete('/usuario', function(req, res) {
-    res.json('delete Usuario');
+app.delete('/usuario/:id', function(req, res) {
+
+    let id = req.params.id;
+
+    let inactivaUsuario = {
+        estado: false
+    }
+
+    Usuario.findByIdAndUpdate(id, inactivaUsuario, (err, usuarioDesactivado) => {
+
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                err
+            })
+        }
+
+        if (usuarioDesactivado.estado === false) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    message: `El Usuario ID ${ id } ya se encuentra inactivo`
+                }
+            });
+        }
+
+        res.json({
+            ok: true,
+            message: `Usuario ID: ${ id } se desactivó con éxito`
+        });
+
+    });
+
 });
 
 

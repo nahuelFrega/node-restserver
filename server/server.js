@@ -13,12 +13,13 @@ app.use(bodyParser.json());
 
 app.use(require('./routes/usuario'));
 
+// mongodb+srv://root:<password>@cluster0-rkkfk.mongodb.net/test
 
 // Conexión DB
-mongoose.connect(`mongodb://localhost:27017/cafe`, { useUnifiedTopology: true, useNewUrlParser: true })
+mongoose.connect(process.env.urlDB, { useUnifiedTopology: true, useNewUrlParser: true })
     .then(() => console.log('DB Connected!'))
     .catch(err => {
-        console.log(`DB Connection Error: $ { err.message }`);
+        console.log(`DB Connection Error: ${ err.message }`);
     });
 
 mongoose.set('useCreateIndex', true);
