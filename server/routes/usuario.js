@@ -1,17 +1,20 @@
 const express = require('express');
-const Usuario = require('../models/usuario');
-const app = express();
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
+const Usuario = require('../models/usuario');
+const { verificaToken, verificaAdminRol } = require('../middlewares/authenticacion');
+const app = express();
 
-app.get('/usuario', function(req, res) {
+app.get('/usuario', [verificaToken, verificaAdminRol], (req, res) => {
 
     let desde = req.query.desde || 0;
     desde = Number(desde);
     let limite = req.query.limite || 5;
     limite = Number(limite);
 
+    // Condiciones para la búsqueda
     const condiciones = {
+        email: req.usuario.email,
         estado: true
     }
 
@@ -53,7 +56,7 @@ app.get('/usuario', function(req, res) {
 
 });
 
-app.post('/usuario', function(req, res) {
+app.post('/usuario', [verificaToken, verificaAdminRol], function(req, res) {
 
     let body = req.body;
 
@@ -109,7 +112,7 @@ app.put('/usuario/:id', function(req, res) {
 
 });
 
-app.delete('/usuario/:id', function(req, res) {
+app.delete('/usuario/:id', [verificaToken, verificaAdminRol], function(req, res) {
 
     let id = req.params.id;
 
@@ -124,6 +127,15 @@ app.delete('/usuario/:id', function(req, res) {
                 ok: false,
                 err
             })
+        }
+
+        if (usuarioDesactivado === null) {
+            return res.status(400).json({
+                ok: false,
+                err: {
+                    message: `El Usuario ID ${ id } no existe en los registros`
+                }
+            });
         }
 
         if (usuarioDesactivado.estado === false) {
