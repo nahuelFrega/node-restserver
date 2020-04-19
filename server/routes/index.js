@@ -1,9 +1,11 @@
 const express = require('express');
 const app = express();
 
-// Declaración de routes
+
+// Declaración de rutas
 app.use(require('./usuario'));
 app.use(require('./login'));
+app.use(require('./categoria'));
 
 
 module.exports = app;

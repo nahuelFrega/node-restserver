@@ -1,3 +1,4 @@
+// Require
 const express = require('express');
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
@@ -90,8 +91,10 @@ app.post('/usuario', [verificaToken, verificaAdminRol], function(req, res) {
 
 app.put('/usuario/:id', function(req, res) {
 
+    // Obtiene el ID por parámetro  
     let id = req.params.id;
-    // Permite definir que elementos pueden ser editados
+
+    // Define que elementos pueden ser editados. Se utiliza la librería de 'underscore'
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']);
 
     Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true }, (err, usuarioDB) => {
