@@ -179,6 +179,16 @@ app.put('/categoria/:id', verificaToken, (req, res) => {
 // ==========================
 app.delete('/categoria/:id', verificaToken, (req, res) => {
 
+    // Valida el rol del usuario logueado, sino es 'ADMIN_ROLE' no permite desactivar la categoría
+    if (req.usuario.role !== 'ADMIN_ROLE') {
+        return res.status(401).json({
+            ok: false,
+            err: {
+                message: 'Permisos insuficientes para realizar esta acción'
+            }
+        })
+    }
+
     // Obtiene el ID por parámetro
     let id = req.params.id;
 
