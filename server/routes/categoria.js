@@ -2,7 +2,7 @@
 const express = require('express');
 const _ = require('underscore');
 const Categoria = require('../models/categoria');
-const { verificaToken } = require('../middlewares/authenticacion');
+const { verificaToken, verificaAdminRol } = require('../middlewares/authenticacion');
 const app = express();
 
 
@@ -20,7 +20,7 @@ app.post('/categoria', verificaToken, (req, res) => {
 
         nombre: body.nombre,
         descripcion: body.descripcion,
-        usuario_id: req.usuario._id // Toma el ID de usuario del payload del token
+        usuario: req.usuario._id // Toma el ID de usuario del payload del token
 
     });
 
@@ -28,6 +28,14 @@ app.post('/categoria', verificaToken, (req, res) => {
     categoria.save((err, categoriaDB) => {
 
         if (err) {
+            return res.status(500).json({
+                ok: false,
+                err
+            });
+        }
+
+        // Validad si se creo al categoria
+        if (!categoriaDB) {
             return res.status(400).json({
                 ok: false,
                 err
@@ -35,11 +43,9 @@ app.post('/categoria', verificaToken, (req, res) => {
         }
 
         res.json({
-
             ok: true,
             categoria: categoriaDB
-
-        })
+        });
 
     });
 
@@ -54,10 +60,12 @@ app.get('/categoria', verificaToken, (req, res) => {
 
     // Utiliza la función 'find' de mongoose para buscar todos los registros
     Categoria.find()
+        .sort('nombre')
+        .populate('usuario', 'nombre email')
         .exec((err, categorias) => {
 
             if (err) {
-                return res.status(400).json({
+                return res.status(500).json({
                     ok: false,
                     err
                 });
@@ -139,13 +147,19 @@ app.put('/categoria/:id', verificaToken, (req, res) => {
     // Obtiene el ID por parámetro
     let id = req.params.id;
 
-    // Define que elementos pueden ser editados. Se utiliza la librería de 'underscore'
-    let body = _.pick(req.body, ['nombre']);
+    // Obtiene los parametros enviados en el body
+    let body = req.body;
 
-    Categoria.findByIdAndUpdate(id, body, { new: true }, (err, categoriaDB) => {
+    // Objeto de los parametros que se van a actualizar
+    let categoriaUpdate = {
+        nombre: body.nombre
+    }
+
+    // Busca el ID y lo actualiza, función propia de mongoose
+    Categoria.findByIdAndUpdate(id, categoriaUpdate, { new: true, runValidators: true }, (err, categoriaDB) => {
 
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 ok: false,
                 err
             })
@@ -155,7 +169,7 @@ app.put('/categoria/:id', verificaToken, (req, res) => {
         if (categoriaDB === null) {
             return res.status(400).json({
                 ok: false,
-                erro: {
+                err: {
                     message: 'La categoria que desea modificar no existe'
                 }
             })
@@ -177,17 +191,7 @@ app.put('/categoria/:id', verificaToken, (req, res) => {
 // 1- El token debe ser válido
 // 2- Solo un ADMIN_ROLE puede hacer este tipo de acciones
 // ==========================
-app.delete('/categoria/:id', verificaToken, (req, res) => {
-
-    // Valida el rol del usuario logueado, sino es 'ADMIN_ROLE' no permite desactivar la categoría
-    if (req.usuario.role !== 'ADMIN_ROLE') {
-        return res.status(401).json({
-            ok: false,
-            err: {
-                message: 'Permisos insuficientes para realizar esta acción'
-            }
-        })
-    }
+app.delete('/categoria/:id', [verificaToken, verificaAdminRol], (req, res) => {
 
     // Obtiene el ID por parámetro
     let id = req.params.id;
@@ -200,14 +204,14 @@ app.delete('/categoria/:id', verificaToken, (req, res) => {
     Categoria.findByIdAndUpdate(id, inactivaCategoria, (err, categoriaInactiva) => {
 
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 ok: false,
                 err
             })
         }
 
         // Valida si existe la categoria
-        if (categoriaInactiva === null) {
+        if (!categoriaInactiva) {
             return res.status(400).json({
                 ok: false,
                 err: {
@@ -223,7 +227,6 @@ app.delete('/categoria/:id', verificaToken, (req, res) => {
                 err: {
                     message: 'La categoria ya se encuentra inactiva'
                 }
-
             })
         }
 

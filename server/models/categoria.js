@@ -14,9 +14,9 @@ let categoriaSchema = new Schema({
         type: String,
         required: [true, 'La descripción es requerida']
     },
-    usuario_id: {
-        type: String,
-        required: [true, 'Se requiere un usuario válido para realizar esta acción']
+    usuario: {
+        type: Schema.Types.ObjectId,
+        ref: 'Usuario'
     },
     estado: {
         type: Boolean,
