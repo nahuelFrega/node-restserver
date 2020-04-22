@@ -10,7 +10,7 @@ const app = express();
 // Crea una nueva categoria
 // 1- El token debe ser válido
 // ==========================
-app.post('/categoria', verificaToken, (req, res) => {
+app.post('/categoria', (req, res) => {
 
     // Captura lo que viene desde el body
     let body = req.body;
